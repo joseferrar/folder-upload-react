@@ -1,12 +1,16 @@
+import JSZip from "jszip";
 import React, { useState } from "react";
+import FileSaver from "file-saver";
 
 function App() {
   const [changeFolder, setChangeFolder] = useState([]);
-  const [todoArr, setTodo] = useState([]);
+  const [todoArr, setTodoArr] = useState([]);
   const [text, setText] = useState("");
   const [search, setSearch] = useState("");
   const [replace, setReplace] = useState("");
 
+  const zip = new JSZip();
+  
   const folderChange = (e) => {
     console.log(e.target.files);
 
@@ -15,29 +19,49 @@ function App() {
       setChangeFolder(e.target.files);
 
       reader.onloadend = () => {
-        const text1 = reader.result;
-        todoArr.push({ text: text1, file: file.name });
+        const file_content = reader.result;
+        todoArr.push({ text: file_content, file: file.name });
         console.log(todoArr);
-        setText(text1);
+        setText(file_content);
       };
       reader.readAsText(file);
     });
   };
-  const searchFilter = todoArr.filter((value) => {
-    if (search === !null) {
-      return value.text;
-    } else if (value.text.toLowerCase().includes(search.toLowerCase()))
-      return value.text;
-  });
-  console.log(searchFilter);
+
+  const searchFilter = todoArr;
 
   const replaceFunction = () => {
-    searchFilter.map((item) => {
+    todoArr.map((item) => {
       const newText = item.text.replace(search, replace);
       console.log(newText);
       setReplace(newText);
+
+      const newArr = { text: newText, file: item.file };
+
+      searchFilter.push(newArr);
+      const ids = searchFilter.map((o) => o.file);
+      const filtered = searchFilter.filter(
+        ({ file }, index) => !ids.includes(file, index + 1)
+      );
+      console.log(filtered);
+      setTodoArr(filtered);
+      setReplace(replace);
     });
   };
+
+  const downloadTxtFile = () => {
+    const folderName = zip.folder("files");
+    todoArr.map((item) => {
+      folderName.file(item.file, item.text);
+    });
+
+    zip.generateAsync({ type: "blob" }).then(function (content) {
+
+      console.log(content);
+      FileSaver.saveAs(content, "files.zip");
+    });
+  };
+
   return (
     <div style={{ margin: 30 }}>
       <input
@@ -46,28 +70,31 @@ function App() {
         webkitdirectory="true"
         onChange={(e) => folderChange(e)}
       />
-
+      <br /> <br />
       <input
         type="text"
         value={search}
-        placeholder="search content"
+        placeholder="fine"
         onChange={(e) => setSearch(e.target.value)}
       />
-      <ul>
-        {searchFilter.map((item, i) => (
-          <div>
-            <h2>{item.file}</h2>
-            <li key={i}>{item.text}</li>
-          </div>
-        ))}
-      </ul>
+      &nbsp;
       <input
         type="text"
-        placeholder="replace text"
+        placeholder="replace"
         value={replace}
         onChange={(e) => setReplace(e.target.value)}
       />
+      &nbsp;
       <button onClick={replaceFunction}>Replace</button>
+      <ul>
+        {todoArr.map((item, i) => (
+          <div key={i}>
+            <h2>{item.file}</h2>
+            <li>{item.text}</li>
+          </div>
+        ))}
+      </ul>
+      <button onClick={downloadTxtFile}>download</button>
     </div>
   );
 }
