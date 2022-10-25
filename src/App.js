@@ -6,7 +6,7 @@ import "./App.css";
 function App() {
   const [action, setAction] = useState(false);
   const [changeFolder, setChangeFolder] = useState([]);
-  const [todoArr, setTodoArr] = useState([]);
+  const [Data, setData] = useState([]);
   const [text, setText] = useState("");
   const [search, setSearch] = useState("");
   const [replace, setReplace] = useState("");
@@ -23,18 +23,18 @@ function App() {
 
       reader.onloadend = () => {
         const file_content = reader.result;
-        todoArr.push({ text: file_content, file: file.name });
-        console.log(todoArr);
+        Data.push({ text: file_content, file: file.name, checked: false });
+        console.log(Data);
         setText(file_content);
       };
       reader.readAsText(file);
     });
   };
 
-  const searchFilter = todoArr;
+  const searchFilter = Data;
 
-  const replaceFunction = () => {
-    todoArr.map((item) => {
+  const replaceAllFunction = () => {
+    Data.map((item) => {
       const newText = item.text.replaceAll(search, replace);
       setReplace(newText);
       console.log(replace.split(search).length);
@@ -46,14 +46,14 @@ function App() {
         ({ file }, index) => !ids.includes(file, index + 1)
       );
       console.log(filtered);
-      setTodoArr(filtered);
+      setData(filtered);
       setReplace(replace);
       setAction(true);
     });
   };
 
-  const deleteFunction = () => {
-    todoArr.map((item) => {
+  const deleteAllFunction = () => {
+    Data.map((item) => {
       const newText = item.text.replaceAll(search, "");
       setReplace(newText);
       const newArr = { text: newText, file: item.file };
@@ -64,7 +64,7 @@ function App() {
         ({ file }, index) => !ids.includes(file, index + 1)
       );
       console.log(filtered);
-      setTodoArr(filtered);
+      setData(filtered);
       setReplace(replace);
       setAction(true);
     });
@@ -72,7 +72,7 @@ function App() {
 
   const downloadTxtFile = () => {
     const folderName = zip.folder("files");
-    todoArr.map((item) => {
+    Data.map((item) => {
       folderName.file(item.file, item.text);
     });
 
@@ -83,6 +83,23 @@ function App() {
   };
 
   console.log("text count --->", replace.split("developer").length - 1);
+
+  const removeOne = (index) => {
+    const newTasks = [...Data];
+    newTasks[index].checked = true;
+    const newText = newTasks[index].text.replaceAll(search, "");
+    const newArr = { text: newText, file: newTasks[index].file };
+    searchFilter.push(newArr);
+    const ids = searchFilter.map((o) => o.file);
+    const filtered = searchFilter.filter(
+      ({ file }, index) => !ids.includes(file, index + 1)
+    );
+    console.log(newText);
+    setData(filtered);
+  };
+
+  console.log(Data);
+
   return (
     <div style={{ margin: 30 }}>
       <span className="btn btn-primary btn-file">
@@ -112,8 +129,8 @@ function App() {
             onChange={(e) => setMode(e.target.value)}
           >
             <option selected>Select Mode..</option>
-            <option value="replace">Replace</option>
-            <option value="delete">Delete</option>
+            <option value="replace">Replace All</option>
+            <option value="delete">Delete All</option>
           </select>
         </div>
 
@@ -129,36 +146,59 @@ function App() {
           </div>
         )}
         <div className="col-2">
-          {mode ===
-            "replace" &&(
-              <button onClick={replaceFunction} className="btn btn-success">
-                Replace
-              </button>
-            )}
+          {mode === "replace" && (
+            <button onClick={replaceAllFunction} className="btn btn-success">
+              Replace All
+            </button>
+          )}
           {mode === "delete" && (
-            <button className="btn btn-danger" onClick={deleteFunction}>
-              Delete
+            <button className="btn btn-danger" onClick={deleteAllFunction}>
+              Delete All
             </button>
           )}
         </div>
       </div>
 
-      <ul>
-        {todoArr.map((item, i) => (
-          <div key={i}>
-            <h2>{item.file}</h2>
-            <li>{item.text}</li>
-          </div>
-        ))}
-      </ul>
       <div className="row">
         <div className="col-1">
-          {action  && (
+          {action && (
             <button onClick={downloadTxtFile} className="btn btn-dark">
               Download
             </button>
           )}
         </div>
+
+        <table id="customers">
+          <tr>
+            <th>S.No</th>
+            <th>File</th>
+            <th>Contact</th>
+            <th>Actions</th>
+          </tr>
+          {Data.map((item, i) => (
+            <tr key={i}>
+              <input
+                type="checkbox"
+                value={item.checked}
+                className="checkbox"
+                // onChange={() => replaceOne(i)}
+              />
+              <td>{item.file}</td>
+              <td>{item.text}</td>
+              <td>
+                {/* <button
+                  onClick={() => replaceOne(i)}
+                  className="btn btn-success"
+                >
+                  Replace
+                </button> */}
+                <button onClick={() => removeOne(i)} className="btn btn-danger">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </table>
       </div>
     </div>
   );
