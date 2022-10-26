@@ -12,6 +12,7 @@ function App() {
   const [replace, setReplace] = useState("");
   //form states
   const [mode, setMode] = useState("");
+  const [increment, setIncrement] = useState(0);
   const zip = new JSZip();
 
   const folderChange = (e) => {
@@ -32,7 +33,22 @@ function App() {
   };
 
   const searchFilter = Data;
-
+  
+  function newrep() {
+    var fid = document.getElementById("find").value;
+    var regexp = new RegExp(fid, "gi");
+    // var rv = document.getElementById("replace").value;
+    var rv = ""
+    var count = 0;
+    Data.map((item) => {
+      let str2 = item.text.replaceAll(regexp, (x) => {
+        count++;
+        return rv;
+      });
+      document.getElementById("message").value = str2;
+      document.getElementById("ChCtr").innerHTML = "Find - " + count;
+    });
+  }
   const replaceAllFunction = () => {
     Data.map((item) => {
       const newText = item.text.replaceAll(search, replace);
@@ -49,11 +65,13 @@ function App() {
       setData(filtered);
       setReplace(replace);
       setAction(true);
+      newrep();
+
     });
   };
 
   const deleteAllFunction = () => {
-    Data.map((item) => {
+    Data.map((item, i) => {
       const newText = item.text.replaceAll(search, "");
       setReplace(newText);
       const newArr = { text: newText, file: item.file };
@@ -67,6 +85,7 @@ function App() {
       setData(filtered);
       setReplace(replace);
       setAction(true);
+      newrep();
     });
   };
 
@@ -87,15 +106,25 @@ function App() {
   const removeOne = (index) => {
     const newTasks = [...Data];
     newTasks[index].checked = true;
+    var regexp = new RegExp(search, "gi");
+    var count = 0
     const newText = newTasks[index].text.replaceAll(search, "");
+    let str2 = newTasks[index].text.replaceAll(regexp, (x) => {
+      count++;
+      return replace;
+    });
+    setIncrement(count)
+    console.log(count, str2)
     const newArr = { text: newText, file: newTasks[index].file };
     searchFilter.push(newArr);
     const ids = searchFilter.map((o) => o.file);
     const filtered = searchFilter.filter(
       ({ file }, index) => !ids.includes(file, index + 1)
     );
+    
     console.log(newText);
     setData(filtered);
+    setAction(true);
   };
 
   console.log(Data);
@@ -115,6 +144,7 @@ function App() {
       <div className="row my-4">
         <div className="col-2">
           <input
+            id="find"
             className="form-control"
             type="text"
             value={search}
@@ -137,6 +167,7 @@ function App() {
         {mode === "replace" && (
           <div className="col-2">
             <input
+              id="replace"
               className="form-control"
               type="text"
               placeholder="replace"
@@ -158,7 +189,7 @@ function App() {
           )}
         </div>
       </div>
-
+      <h4 id="ChCtr" style={{marginLeft: "auto"}}>{"Find - " + increment}</h4>
       <div className="row">
         <div className="col-1">
           {action && (
@@ -166,6 +197,8 @@ function App() {
               Download
             </button>
           )}
+          {/* <button className="btn btn-danger">Delete</button> */}
+         
         </div>
 
         <table id="customers">
@@ -176,12 +209,12 @@ function App() {
             <th>Actions</th>
           </tr>
           {Data.map((item, i) => (
-            <tr key={i}>
+            <tr key={i} id="message">
               <input
                 type="checkbox"
                 value={item.checked}
                 className="checkbox"
-                // onChange={() => replaceOne(i)}
+                // onChange={() => removeOne(i)}
               />
               <td>{item.file}</td>
               <td>{item.text}</td>
@@ -200,6 +233,7 @@ function App() {
           ))}
         </table>
       </div>
+
     </div>
   );
 }
