@@ -1,0 +1,165 @@
+import "./App.css";
+import { useState } from "react";
+import Papa from "papaparse";
+import html2canvas from "html2canvas";
+import jsPdf from "jspdf";
+
+function App() {
+  const [parsedData, setParsedData] = useState([]);
+  const [tableRows, setTableRows] = useState([]);
+
+  const [values, setValues] = useState([]);
+
+  const [post, setPost] = useState();
+  const [find, setFind] = useState("");
+  const [reforce, setReforce] = useState("");
+
+  const changeHandler = (event) => {
+    Papa.parse(event.target.files[0], {
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        const rowsArray = [];
+        const valuesArray = [];
+
+        results.data.map((d) => {
+          rowsArray.push(Object.keys(d));
+          valuesArray.push(Object.values(d));
+        });
+
+        setParsedData(results.data);
+
+        setTableRows(rowsArray[0]);
+
+        setValues(valuesArray);
+      },
+    });
+  };
+
+  const replaceFunction = () => {
+    var csv = Papa.unparse(parsedData);
+    const newText = csv.replaceAll(find, reforce);
+    console.log(newText);
+    setPost(newText);
+    Papa.parse(newText, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function (results) {
+        const rowsArray = [];
+        const valuesArray = [];
+
+        results.data.map((d) => {
+          rowsArray.push(Object.keys(d));
+          valuesArray.push(Object.values(d));
+        });
+
+        setParsedData(results.data);
+
+        setTableRows(rowsArray[0]);
+
+        setValues(valuesArray);
+      },
+    });
+  };
+
+  const downloadCSVFile = () => {
+    var csvData = new Blob([post], { type: "text/csv;charset=utf-8;" });
+    var csvURL = null;
+    if (navigator.msSaveBlob) {
+      csvURL = navigator.msSaveBlob(csvData, "download.csv");
+    } else {
+      csvURL = window.URL.createObjectURL(csvData);
+    }
+    var tempLink = document.createElement("a");
+    tempLink.href = csvURL;
+    tempLink.setAttribute("download", "download.csv");
+    tempLink.click();
+  };
+
+  const downloadJSONFile = () => {
+    const fileName = "my-file";
+    const json = JSON.stringify(parsedData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const href = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = fileName + ".json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(href);
+  };
+
+  const printPDF = () => {
+    const domElement = document.getElementById("table");
+    html2canvas(domElement, {
+      // onclone: document => {
+      //   document.getElementById("print").style.visibility = "hidden";
+      // }
+    }).then(canvas => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPdf();
+      pdf.addImage(imgData, "JPEG", 10, 10);
+      pdf.save(`myfile.pdf`);
+    });
+  };
+  console.log(parsedData);
+  return (
+    <div>
+      {/* File Uploader */}
+      <input
+        type="file"
+        name="file"
+        onChange={changeHandler}
+        accept=".csv"
+        style={{ display: "block", margin: "10px auto" }}
+      />
+      <br />
+      <br />
+      {/* Table */}
+      <table id="table">
+        <thead>
+          <tr>
+            {tableRows.map((rows, index) => {
+              return <th key={index}>{rows}</th>;
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {values.map((value, index) => {
+            return (
+              <tr key={index}>
+                {value.map((val, i) => {
+                  return <td key={i}>{val}</td>;
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+
+      </table>
+      
+      <br />
+        <input
+          type="text"
+          placeholder="find"
+          value={find}
+          onChange={(e) => setFind(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="replace"
+          value={reforce}
+          onChange={(e) => setReforce(e.target.value)}
+        />
+        <br />
+        <button onClick={replaceFunction}>Replace</button>
+        <button onClick={downloadCSVFile}>Download CSV</button>
+        <button onClick={downloadJSONFile}>Download JSON</button>
+        <button onClick={printPDF}>Download PDF</button>
+    </div>
+  );
+}
+
+export default App;
