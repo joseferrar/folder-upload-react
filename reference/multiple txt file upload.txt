@@ -1,0 +1,95 @@
+import React, { useState } from "react";
+
+function App() {
+  const [post, setPost] = useState();
+  const [changeFolder, setChangeFolder] = useState([]);
+  const [find, setFind] = useState("");
+  const [reforce, setReforce] = useState("");
+
+  const showFile = async (e) => {
+    e.preventDefault();
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const text = e.target.result;
+      console.log(text.replace("dd"));
+      setPost(text);
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+
+  const downloadTxtFile = () => {
+    const element = document.createElement("a");
+    const file = new Blob([post], {
+      type: "text/plain",
+    });
+    element.href = URL.createObjectURL(file);
+    element.download = "myFile.txt";
+    document.body.appendChild(element);
+    element.click();
+  };
+
+  const folderChange = async (e) => {
+    console.log(e.target.files);
+
+    Array.from(e.target.files).forEach((file) => {
+      // Define a new file reader
+      let reader = new FileReader();
+      setChangeFolder(e.target.files);
+      // Function to execute after loading the file
+      reader.onload = () => {
+      
+        setPost(reader.result);
+        console.log(reader.result);
+      };
+
+      // Read the file as a text
+      reader.readAsText(file);
+    });
+  };
+  const replaceFunction = () => {
+    const newText = post.replace(find, reforce);
+    console.log(newText);
+    setPost(newText);
+  };
+  // Array.from(changeFolder).map((file) =>
+  //   console.log("Print to Console " + file.name)
+  // );
+  console.log(post);
+  return (
+    <div style={{ margin: 30 }}>
+      <input type="file" multiple={true} onChange={(e) => showFile(e)} />
+      <input
+        type="file"
+        id="flup"
+        webkitdirectory="true"
+        onChange={(e) => folderChange(e)}
+      /> 
+      <br />
+      <input
+        type="text"
+        placeholder="find"
+        value={find}
+        onChange={(e) => setFind(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="replace"
+        value={reforce}
+        onChange={(e) => setReforce(e.target.value)}
+      />
+      <br />
+      <button onClick={replaceFunction}>Replace</button>
+      <br />
+      <button onClick={downloadTxtFile}>Download</button>
+      <br />
+
+      <ul>
+        {Array.from(changeFolder).map((file, i) => (
+          <li key={i}>{file.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default App;

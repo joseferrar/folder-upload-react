@@ -1,0 +1,62 @@
+import React, { useState } from "react";
+
+function App() {
+  const [changeFolder, setChangeFolder] = useState([]);
+  const [todoArr, setTodo] = useState([]);
+  const [text, setText] = useState("");
+  const [search, setSearch] = useState("");
+
+  
+  const folderChange = (e) => {
+    console.log(e.target.files);
+
+    Array.from(e.target.files).forEach((file) => {
+      let reader = new FileReader();
+      setChangeFolder(e.target.files);
+
+      reader.onloadend = () => {
+        // await console.log(reader.result);
+        const text1 = reader.result;
+        todoArr.push(text1);
+        setText(text1);
+      };
+      reader.readAsText(file);
+    });
+  };
+  const searchFilter = todoArr.filter((value) => {
+    if (search === !null) {
+      return value;
+    } else if (value.toLowerCase().includes(search.toLowerCase()))
+      return value;
+  });
+  console.log(searchFilter);
+  return (
+    <div style={{ margin: 30 }}>
+      <input
+        type="file"
+        id="flup"
+        webkitdirectory="true"
+        onChange={(e) => folderChange(e)}
+      />
+
+      <ul>
+        {Array.from(changeFolder).map((file, i) => (
+          <li key={i}>{file.name}</li>
+        ))}
+        <input
+          type="text"
+          value={search}
+          placeholder="search"
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <ul>
+          {searchFilter.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      </ul>
+    </div>
+  );
+}
+
+export default App;

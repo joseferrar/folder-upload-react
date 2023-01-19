@@ -1,0 +1,61 @@
+import React, { useState } from "react";
+
+function App() {
+  const [post, setPost] = useState();
+  const [changeText, setChangeText] = useState('');
+  const [find, setFind] = useState('');
+  const [reforce, setReforce] = useState('');
+
+  const showFile = async (e) => {
+    e.preventDefault();
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const text = e.target.result;
+      console.log(text.replace("dd"));
+      setPost(text);
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+
+
+  const downloadTxtFile = () => {
+    const element = document.createElement("a");
+    const file = new Blob([post], {
+      type: "text/plain",
+    });
+    element.href = URL.createObjectURL(file);
+    element.download = "myFile.txt";
+    document.body.appendChild(element);
+    element.click();
+  };
+
+  const replaceFunction = () => {
+    const newText = post.replace(find, reforce)
+    console.log(newText);
+    setPost(newText);
+  }
+  return (
+    <div style={{margin: 30}}>
+      <input type="file" multiple={true} encType="multipart/form-data" onChange={(e) => showFile(e)} />
+      {/* <p>{post}</p> */}
+      <textarea
+        type="text"
+        value={post}
+        style={{ width: 300, height: 200 }}
+        onChange={(e) => setPost(e.target.value)}
+      />
+    
+      <br />
+      <input type="text" placeholder="find" value={find} onChange={(e) => setFind(e.target.value)}/>
+      <input type="text" placeholder="replace" value={reforce} onChange={(e) => setReforce(e.target.value)}/>
+      <br />
+      <button onClick={replaceFunction}>Replace</button>
+      <br />
+      <button onClick={downloadTxtFile}>Download</button>
+      <br />
+    
+    </div>
+  );
+}
+
+export default App;
